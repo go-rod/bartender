@@ -12,6 +12,7 @@ linters:
     - musttag
     - revive
     - varnamelen
+    - depguard
 
     # Deprecated ones:
     - structcheck
