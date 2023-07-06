@@ -27,15 +27,12 @@ func TestBasic(t *testing.T) {
 	proxy.Mux.HandleFunc("/", bt.Handler)
 
 	{
-		res := g.Req("", proxy.URL("/test?q=ok"))
+		res := g.Req("", proxy.URL("/test?q=ok"), http.Header{"Accept-Language": []string{"en"}})
 		g.Has(res.String(), "<body></body>")
 	}
 
 	{
-		res := g.Req("", proxy.URL("/test?q=ok"), http.Header{
-			//nolint: lll
-			"User-Agent": []string{"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/113.0.5672.127 Safari/537.36"},
-		})
+		res := g.Req("", proxy.URL("/test?q=ok"))
 		g.Has(res.String(), "/test?q=ok")
 	}
 }

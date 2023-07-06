@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
-	"github.com/mileusna/useragent"
 )
 
 type Bartender struct {
@@ -43,14 +42,10 @@ func (b *Bartender) Serve() {
 }
 
 func (b *Bartender) Handler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		ua := useragent.Parse(r.UserAgent())
+	if r.Method == http.MethodGet && r.Header.Get("Accept-Language") == "" {
+		b.RenderPage(w, r)
 
-		if ua.Bot {
-			b.RenderPage(w, r)
-
-			return
-		}
+		return
 	}
 
 	b.proxy.ServeHTTP(w, r)

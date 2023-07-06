@@ -3,8 +3,7 @@ module github.com/go-rod/bartender
 go 1.20
 
 require (
-	github.com/go-rod/rod v0.113.3
-	github.com/mileusna/useragent v1.3.3
+	github.com/go-rod/rod v0.113.4
 	github.com/ysmood/got v0.34.1
 )
 
