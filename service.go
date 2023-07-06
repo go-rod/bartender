@@ -1,6 +1,7 @@
 package bartender
 
 import (
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -32,7 +33,7 @@ func New(addr, target string) *Bartender {
 }
 
 func (b *Bartender) Serve() {
-	http.HandleFunc("/", b.handler)
+	http.HandleFunc("/", b.Handler)
 
 	err := http.ListenAndServe(b.addr, nil)
 	if err != nil {
@@ -40,12 +41,12 @@ func (b *Bartender) Serve() {
 	}
 }
 
-func (b *Bartender) handler(w http.ResponseWriter, r *http.Request) {
+func (b *Bartender) Handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		ua := useragent.Parse(r.UserAgent())
 
 		if ua.Bot {
-			b.renderPage(w, r)
+			b.RenderPage(w, r)
 			return
 		}
 	}
@@ -53,19 +54,12 @@ func (b *Bartender) handler(w http.ResponseWriter, r *http.Request) {
 	b.proxy.ServeHTTP(w, r)
 }
 
-func (b *Bartender) renderPage(w http.ResponseWriter, r *http.Request) {
-	u := *r.URL
+func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) {
+	log.Println("headless render:", r.URL.String())
 
+	u := *r.URL
 	u.Scheme = b.target.Scheme
 	u.Host = b.target.Host
-
-	res, err := http.Get(u.String())
-	if err != nil {
-		panic(err)
-	}
-	_ = res.Body.Close()
-
-	w.WriteHeader(res.StatusCode)
 
 	l := launcher.New()
 	defer l.Cleanup()
