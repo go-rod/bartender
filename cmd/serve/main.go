@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 
 	"github.com/go-rod/bartender"
 )
@@ -17,7 +17,7 @@ func main() {
 		panic("cli option -t required")
 	}
 
-	fmt.Printf("Bartender started %s -> %s\n", *port, *target)
+	log.Printf("Bartender started %s -> %s\n", *port, *target)
 
 	bartender.New(*port, *target).Serve()
 }

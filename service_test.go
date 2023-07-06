@@ -33,6 +33,7 @@ func TestBasic(t *testing.T) {
 
 	{
 		res := g.Req("", proxy.URL("/test?q=ok"), http.Header{
+			//nolint: lll
 			"User-Agent": []string{"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/113.0.5672.127 Safari/537.36"},
 		})
 		g.Has(res.String(), "/test?q=ok")

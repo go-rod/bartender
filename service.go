@@ -1,3 +1,4 @@
+// Package bartender is a service to make web crawlers consume webpages easier
 package bartender
 
 import (
@@ -47,6 +48,7 @@ func (b *Bartender) Handler(w http.ResponseWriter, r *http.Request) {
 
 		if ua.Bot {
 			b.RenderPage(w, r)
+
 			return
 		}
 	}
