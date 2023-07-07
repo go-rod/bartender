@@ -33,7 +33,7 @@ func New(addr, target string) *Bartender {
 }
 
 func (b *Bartender) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet && r.Header.Get("Accept-Language") == "" {
+	if r.Method == http.MethodGet && r.Header.Get("Accept-Language") != "" {
 		b.RenderPage(w, r)
 
 		return
