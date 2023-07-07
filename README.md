@@ -9,7 +9,7 @@ It acts like a transparent http proxy by default, it only actives when the clien
 You can simplify use bartender as the gateway in front of your web server:
 
 ```bash
-docker run -p 3000:3000 bartender ./serve -p :3000 -t http://your-web-server:8080
+docker run -p 3000:3000 ghcr.io/go-rod/bartender ./serve -p :3000 -t http://your-web-server:8080
 ```
 
 A common data flow looks like this:
