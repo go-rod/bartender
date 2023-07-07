@@ -27,12 +27,14 @@ func TestBasic(t *testing.T) {
 	proxy.Mux.HandleFunc("/", bt.ServeHTTP)
 
 	{
-		res := g.Req("", proxy.URL("/test?q=ok"))
+		// browser
+		res := g.Req("", proxy.URL("/test?q=ok"), http.Header{"Accept-Language": {"en"}})
 		g.Has(res.String(), "<body></body>")
 	}
 
 	{
-		res := g.Req("", proxy.URL("/test?q=ok"), http.Header{"Accept-Language": {"en"}})
+		// web crawler
+		res := g.Req("", proxy.URL("/test?q=ok"))
 		g.Has(res.String(), "/test?q=ok")
 	}
 }
