@@ -2,7 +2,7 @@
 
 It's design to make SEO for single page application easier, so that you don't have to use Server-side rendering tricks.
 
-It acts like a transparent http proxy by default, it only actives when the User-Agent looks like a web crawler, such as Googlebot, Baiduspider, etc.
+It acts like a transparent http proxy by default, it only actives when the client looks like a web crawler, such as Googlebot, Baiduspider, etc.
 
 ## Installation
 
@@ -10,7 +10,7 @@ Usually, you will have a gateway like nginx in front of your web server. You can
 
 A common way to detect web crawler: [link](https://stackoverflow.com/a/2517444/1089063).
 
-A common data flow look like this:
+A common data flow looks like this:
 
 ```mermaid
 graph TD;
