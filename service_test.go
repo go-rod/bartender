@@ -24,7 +24,7 @@ func TestBasic(t *testing.T) {
 
 	bt := bartender.New("", website.URL())
 
-	proxy.Mux.HandleFunc("/", bt.Handler)
+	proxy.Mux.HandleFunc("/", bt.ServeHTTP)
 
 	{
 		res := g.Req("", proxy.URL("/test?q=ok"), http.Header{"Accept-Language": []string{"en"}})

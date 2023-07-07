@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 
 	"github.com/go-rod/bartender"
 )
@@ -19,5 +20,8 @@ func main() {
 
 	log.Printf("Bartender started %s -> %s\n", *port, *target)
 
-	bartender.New(*port, *target).Serve()
+	err := http.ListenAndServe(*port, bartender.New(*port, *target))
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

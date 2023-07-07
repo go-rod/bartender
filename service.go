@@ -32,16 +32,7 @@ func New(addr, target string) *Bartender {
 	}
 }
 
-func (b *Bartender) Serve() {
-	http.HandleFunc("/", b.Handler)
-
-	err := http.ListenAndServe(b.addr, nil)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (b *Bartender) Handler(w http.ResponseWriter, r *http.Request) {
+func (b *Bartender) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet && r.Header.Get("Accept-Language") == "" {
 		b.RenderPage(w, r)
 
