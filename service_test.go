@@ -22,7 +22,7 @@ func TestBasic(t *testing.T) {
 
 	proxy := g.Serve()
 
-	bt := bartender.New("", website.URL())
+	bt := bartender.New("", website.URL(), 2)
 
 	proxy.Mux.HandleFunc("/", bt.ServeHTTP)
 

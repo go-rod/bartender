@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
 	"github.com/mileusna/useragent"
 )
 
@@ -17,9 +16,10 @@ type Bartender struct {
 	target     *url.URL
 	proxy      *httputil.ReverseProxy
 	bypassList map[string]bool
+	pool       rod.PagePool
 }
 
-func New(addr, target string) *Bartender {
+func New(addr, target string, poolSize int) *Bartender {
 	u, err := url.Parse(target)
 	if err != nil {
 		panic(err)
@@ -43,6 +43,7 @@ func New(addr, target string) *Bartender {
 			useragent.Edge:             true,
 			useragent.Vivaldi:          true,
 		},
+		pool: rod.NewPagePool(poolSize),
 	}
 }
 
@@ -68,13 +69,9 @@ func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) {
 	u.Scheme = b.target.Scheme
 	u.Host = b.target.Host
 
-	l := launcher.New()
-	defer l.Cleanup()
+	page := b.pool.Get(func() *rod.Page { return rod.New().MustConnect().MustPage() })
 
-	browser := rod.New().ControlURL(l.MustLaunch()).MustConnect()
-	defer browser.MustClose()
-
-	page := browser.MustPage(u.String()).MustWaitStable()
+	page.MustNavigate(u.String()).MustWaitStable()
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
