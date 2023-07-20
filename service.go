@@ -9,12 +9,14 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	"github.com/mileusna/useragent"
 )
 
 type Bartender struct {
-	addr   string
-	target *url.URL
-	proxy  *httputil.ReverseProxy
+	addr       string
+	target     *url.URL
+	proxy      *httputil.ReverseProxy
+	bypassList map[string]bool
 }
 
 func New(addr, target string) *Bartender {
@@ -29,17 +31,34 @@ func New(addr, target string) *Bartender {
 		addr:   addr,
 		target: u,
 		proxy:  proxy,
+		bypassList: map[string]bool{
+			useragent.Opera:            true,
+			useragent.OperaMini:        true,
+			useragent.OperaTouch:       true,
+			useragent.Chrome:           true,
+			useragent.HeadlessChrome:   true,
+			useragent.Firefox:          true,
+			useragent.InternetExplorer: true,
+			useragent.Safari:           true,
+			useragent.Edge:             true,
+			useragent.Vivaldi:          true,
+		},
 	}
 }
 
+func (b *Bartender) BypassUserAgentNames(list map[string]bool) {
+	b.bypassList = list
+}
+
 func (b *Bartender) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet && r.Header.Get("Accept-Language") == "" {
-		b.RenderPage(w, r)
+	ua := useragent.Parse(r.Header.Get("User-Agent"))
+	if b.bypassList[ua.Name] {
+		b.proxy.ServeHTTP(w, r)
 
 		return
 	}
 
-	b.proxy.ServeHTTP(w, r)
+	b.RenderPage(w, r)
 }
 
 func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) {

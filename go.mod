@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/go-rod/rod v0.113.4
+	github.com/mileusna/useragent v1.3.3
 	github.com/ysmood/got v0.34.1
 )
 
