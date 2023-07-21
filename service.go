@@ -8,17 +8,22 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
 	"github.com/mileusna/useragent"
 )
 
 type Bartender struct {
-	addr       string
-	target     *url.URL
-	proxy      *httputil.ReverseProxy
-	bypassList map[string]bool
-	pool       rod.PagePool
+	addr          string
+	target        *url.URL
+	proxy         *httputil.ReverseProxy
+	bypassList    map[string]bool
+	pool          rod.PagePool
+	blockRequests []string
+	maxWait       time.Duration
 }
 
 func New(addr, target string, poolSize int) *Bartender {
@@ -45,12 +50,51 @@ func New(addr, target string, poolSize int) *Bartender {
 			useragent.Edge:             true,
 			useragent.Vivaldi:          true,
 		},
-		pool: rod.NewPagePool(poolSize),
+		pool:          rod.NewPagePool(poolSize),
+		blockRequests: []string{},
+		maxWait:       3 * time.Second,
 	}
 }
 
 func (b *Bartender) BypassUserAgentNames(list map[string]bool) {
 	b.bypassList = list
+}
+
+func (b *Bartender) BlockRequest(patterns ...string) {
+	b.blockRequests = patterns
+}
+
+// MaxWait sets the max wait time for the headless browser to render the page.
+// If the max wait time is reached, bartender will stop waiting for page rendering and
+// immediately return the current html.
+func (b *Bartender) MaxWait(d time.Duration) {
+	b.maxWait = d
+}
+
+func (b *Bartender) newPage() *rod.Page {
+	page := rod.New().MustConnect().MustPage()
+
+	if len(b.blockRequests) > 0 {
+		router := page.HijackRequests()
+
+		for _, pattern := range b.blockRequests {
+			router.MustAdd(pattern, func(ctx *rod.Hijack) {
+				ctx.Response.Fail(proto.NetworkErrorReasonBlockedByClient)
+			})
+		}
+
+		go router.Run()
+	}
+
+	log.Println("headless browser started:", page.SessionID)
+
+	return page
+}
+
+func (b *Bartender) WarnUp() {
+	for i := 0; i < len(b.pool); i++ {
+		b.pool.Put(b.pool.Get(b.newPage))
+	}
 }
 
 func (b *Bartender) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -80,11 +124,6 @@ func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) bool {
 
 	log.Println("headless render:", u)
 
-	page := b.pool.Get(func() *rod.Page { return rod.New().MustConnect().MustPage() })
-	defer b.pool.Put(page)
-
-	page.MustNavigate(u).MustWaitStable()
-
 	for k, vs := range resHeader {
 		if k == "Content-Length" {
 			continue
@@ -97,10 +136,34 @@ func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) bool {
 
 	w.WriteHeader(statusCode)
 
-	_, err := w.Write([]byte(page.MustHTML()))
-	if err != nil {
-		panic(err)
-	}
+	page := b.pool.Get(b.newPage)
+	defer b.pool.Put(page)
+
+	page, cancel := page.WithCancel()
+
+	once := sync.Once{}
+
+	go func() {
+		time.Sleep(b.maxWait)
+		log.Println("max wait time reached, return current html:", u)
+		once.Do(func() {
+			body, _ := page.HTML()
+			_, _ = w.Write([]byte(body))
+			cancel()
+		})
+	}()
+
+	_ = page.Context(r.Context()).Navigate(u)
+
+	_ = page.WaitStable(time.Second)
+
+	body, _ := page.HTML()
+
+	log.Println("headless render done:", u)
+
+	once.Do(func() {
+		_, _ = w.Write([]byte(body))
+	})
 
 	return true
 }

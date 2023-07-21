@@ -4,6 +4,7 @@ run:
 linters:
   enable-all: true
   disable:
+    - wsl
     - contextcheck
     - gomnd
     - gochecknoinits
