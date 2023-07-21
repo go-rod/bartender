@@ -11,7 +11,10 @@ import (
 func TestBasic(t *testing.T) {
 	g := got.T(t)
 
-	website := g.Serve().Route("/", ".html", `<html>
+	website := g.Serve()
+
+	website.Route("/a.png", ".png", "image")
+	website.Route("/", ".html", `<html>
 		<body></body>
 		<script>
 			window.onload = () => {
@@ -27,8 +30,9 @@ func TestBasic(t *testing.T) {
 	proxy.Mux.HandleFunc("/", bt.ServeHTTP)
 
 	{
+		//nolint: lll
 		// browser
-		res := g.Req("", proxy.URL("/test?q=ok"), http.Header{"Accept-Language": {"en"}})
+		res := g.Req("", proxy.URL("/test?q=ok"), http.Header{"User-Agent": {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"}})
 		g.Has(res.String(), "<body></body>")
 	}
 
@@ -36,5 +40,11 @@ func TestBasic(t *testing.T) {
 		// web crawler
 		res := g.Req("", proxy.URL("/test?q=ok"))
 		g.Has(res.String(), "/test?q=ok")
+	}
+
+	{
+		// can get image
+		res := g.Req("", proxy.URL("/a.png"))
+		g.Has(res.String(), "image")
 	}
 }
