@@ -16,8 +16,12 @@ func main() {
 	size := flag.Int("s", 2, "size of the pool")
 	maxWait := flag.Duration("w", 3*time.Second, "max wait time for a page rendering")
 
-	var block BlockRequestsFlag
-	flag.Var(&block, "b", "block the requests that match the pattern, such as 'https://a.com/*', can set multiple ones")
+	var bypassUAs StringsFlag
+	flag.Var(&bypassUAs, "u", "bypass the specified user-agent names")
+
+	var blockList StringsFlag
+	flag.Var(&blockList, "b",
+		"block the requests that match the pattern, such as 'https://a.com/*', can set multiple ones")
 
 	flag.Parse()
 
@@ -28,7 +32,8 @@ func main() {
 	log.Printf("Bartender started %s -> %s\n", *port, *target)
 
 	b := bartender.New(*port, *target, *size)
-	b.BlockRequest(block...)
+	b.BlockRequests(blockList...)
+	b.BypassUserAgentNames(bypassUAs...)
 	b.MaxWait(*maxWait)
 	b.WarnUp()
 
@@ -38,13 +43,13 @@ func main() {
 	}
 }
 
-type BlockRequestsFlag []string
+type StringsFlag []string
 
-func (i *BlockRequestsFlag) String() string {
+func (i *StringsFlag) String() string {
 	return strings.Join(*i, ", ")
 }
 
-func (i *BlockRequestsFlag) Set(value string) error {
+func (i *StringsFlag) Set(value string) error {
 	*i = append(*i, value)
 
 	return nil

@@ -56,11 +56,14 @@ func New(addr, target string, poolSize int) *Bartender {
 	}
 }
 
-func (b *Bartender) BypassUserAgentNames(list map[string]bool) {
-	b.bypassList = list
+func (b *Bartender) BypassUserAgentNames(list ...string) {
+	b.bypassList = map[string]bool{}
+	for _, ua := range list {
+		b.bypassList[ua] = true
+	}
 }
 
-func (b *Bartender) BlockRequest(patterns ...string) {
+func (b *Bartender) BlockRequests(patterns ...string) {
 	b.blockRequests = patterns
 }
 
