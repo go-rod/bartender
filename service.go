@@ -147,8 +147,8 @@ func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) bool {
 
 	go func() {
 		time.Sleep(b.maxWait)
-		log.Println("max wait time reached, return current html:", u)
 		once.Do(func() {
+			log.Println("max wait time reached, return current html:", u)
 			body, _ := page.HTML()
 			_, _ = w.Write([]byte(body))
 			cancel()
@@ -161,9 +161,8 @@ func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) bool {
 
 	body, _ := page.HTML()
 
-	log.Println("headless render done:", u)
-
 	once.Do(func() {
+		log.Println("headless render done:", u)
 		_, _ = w.Write([]byte(body))
 	})
 
