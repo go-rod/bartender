@@ -16,7 +16,7 @@ func main() {
 	size := flag.Int("s", 2, "size of the pool")
 	maxWait := flag.Duration("w", 3*time.Second, "max wait time for a page rendering")
 
-	var bypassUAs StringsFlag
+	var bypassUAs StringsFlag = bartender.DefaultBypassUserAgentNames
 	flag.Var(&bypassUAs, "u", "bypass the specified user-agent names")
 
 	var blockList StringsFlag
@@ -30,6 +30,8 @@ func main() {
 	}
 
 	log.Printf("Bartender started %s -> %s\n", *port, *target)
+	log.Printf("Block list: %v\n", blockList)
+	log.Printf("Bypass user-agent names: %v\n", bypassUAs)
 
 	b := bartender.New(*port, *target, *size)
 	b.BlockRequests(blockList...)

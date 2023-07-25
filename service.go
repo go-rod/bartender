@@ -16,6 +16,19 @@ import (
 	"github.com/mileusna/useragent"
 )
 
+var DefaultBypassUserAgentNames = []string{
+	useragent.Opera,
+	useragent.OperaMini,
+	useragent.OperaTouch,
+	useragent.Chrome,
+	useragent.HeadlessChrome,
+	useragent.Firefox,
+	useragent.InternetExplorer,
+	useragent.Safari,
+	useragent.Edge,
+	useragent.Vivaldi,
+}
+
 type Bartender struct {
 	addr          string
 	target        *url.URL
@@ -35,21 +48,10 @@ func New(addr, target string, poolSize int) *Bartender {
 	proxy := httputil.NewSingleHostReverseProxy(u)
 
 	return &Bartender{
-		addr:   addr,
-		target: u,
-		proxy:  proxy,
-		bypassList: map[string]bool{
-			useragent.Opera:            true,
-			useragent.OperaMini:        true,
-			useragent.OperaTouch:       true,
-			useragent.Chrome:           true,
-			useragent.HeadlessChrome:   true,
-			useragent.Firefox:          true,
-			useragent.InternetExplorer: true,
-			useragent.Safari:           true,
-			useragent.Edge:             true,
-			useragent.Vivaldi:          true,
-		},
+		addr:          addr,
+		target:        u,
+		proxy:         proxy,
+		bypassList:    strToMap(DefaultBypassUserAgentNames),
 		pool:          rod.NewPagePool(poolSize),
 		blockRequests: []string{},
 		maxWait:       3 * time.Second,
@@ -57,10 +59,7 @@ func New(addr, target string, poolSize int) *Bartender {
 }
 
 func (b *Bartender) BypassUserAgentNames(list ...string) {
-	b.bypassList = map[string]bool{}
-	for _, ua := range list {
-		b.bypassList[ua] = true
-	}
+	b.bypassList = strToMap(list)
 }
 
 func (b *Bartender) BlockRequests(patterns ...string) {
@@ -197,4 +196,13 @@ func getHeader(ctx context.Context, u string) (int, http.Header) {
 
 func htmlContentType(h http.Header) bool {
 	return strings.Contains(h.Get("Content-Type"), "text/html")
+}
+
+func strToMap(list []string) map[string]bool {
+	m := map[string]bool{}
+	for _, s := range list {
+		m[s] = true
+	}
+
+	return m
 }
