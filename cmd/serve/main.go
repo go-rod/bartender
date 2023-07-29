@@ -37,7 +37,8 @@ func main() {
 	b.BlockRequests(blockList...)
 	b.BypassUserAgentNames(bypassUAs...)
 	b.MaxWait(*maxWait)
-	b.WarnUp()
+	b.WarmUp()
+	b.AutoFree()
 
 	err := http.ListenAndServe(*port, b)
 	if err != nil {

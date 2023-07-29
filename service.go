@@ -73,6 +73,10 @@ func (b *Bartender) MaxWait(d time.Duration) {
 	b.maxWait = d
 }
 
+func (b *Bartender) getPage() *rod.Page {
+	return b.pool.Get(b.newPage)
+}
+
 func (b *Bartender) newPage() *rod.Page {
 	page := rod.New().MustConnect().MustPage()
 
@@ -93,10 +97,29 @@ func (b *Bartender) newPage() *rod.Page {
 	return page
 }
 
-func (b *Bartender) WarnUp() {
+// WarmUp pre-creates the headless browsers.
+func (b *Bartender) WarmUp() {
 	for i := 0; i < len(b.pool); i++ {
-		b.pool.Put(b.pool.Get(b.newPage))
+		b.pool.Put(b.getPage())
 	}
+}
+
+// AutoFree automatically closes the each headless browser after a period of time.
+// It prevent the memory leak of the headless browser.
+func (b *Bartender) AutoFree() {
+	go func() {
+		for {
+			time.Sleep(10 * time.Minute)
+
+			err := b.getPage().Browser().Close()
+			if err != nil {
+				log.Println("failed to close browser:", err)
+
+				continue
+			}
+			b.pool.Put(nil)
+		}
+	}()
 }
 
 func (b *Bartender) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +161,7 @@ func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) bool {
 
 	w.WriteHeader(statusCode)
 
-	page := b.pool.Get(b.newPage)
+	page := b.getPage()
 	defer b.pool.Put(page)
 
 	page, cancel := page.WithCancel()
