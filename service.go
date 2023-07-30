@@ -164,7 +164,7 @@ func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) bool {
 	page := b.getPage()
 	defer b.pool.Put(page)
 
-	page, cancel := page.WithCancel()
+	page, cancel := page.Context(r.Context()).WithCancel()
 
 	once := sync.Once{}
 
@@ -178,7 +178,7 @@ func (b *Bartender) RenderPage(w http.ResponseWriter, r *http.Request) bool {
 		})
 	}()
 
-	_ = page.Context(r.Context()).Navigate(u)
+	_ = page.Navigate(u)
 
 	_ = page.WaitStable(time.Second)
 
