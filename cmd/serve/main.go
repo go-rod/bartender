@@ -15,6 +15,7 @@ func main() {
 	target := flag.String("t", "", "target url to proxy")
 	size := flag.Int("s", 2, "size of the pool")
 	maxWait := flag.Duration("w", 3*time.Second, "max wait time for a page rendering")
+	autoFree := flag.Duration("f", 10*time.Minute, "auto close each headless browser after the specified time")
 
 	var bypassUAs StringsFlag = bartender.DefaultBypassUserAgentNames
 	flag.Var(&bypassUAs, "u", "bypass the specified user-agent names")
@@ -38,7 +39,7 @@ func main() {
 	b.BypassUserAgentNames(bypassUAs...)
 	b.MaxWait(*maxWait)
 	b.WarmUp()
-	b.AutoFree()
+	b.AutoFree(*autoFree)
 
 	err := http.ListenAndServe(*port, b)
 	if err != nil {

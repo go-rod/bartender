@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/mileusna/useragent"
 )
@@ -78,7 +79,10 @@ func (b *Bartender) getPage() *rod.Page {
 }
 
 func (b *Bartender) newPage() *rod.Page {
-	page := rod.New().MustConnect().MustPage()
+	l := launcher.New()
+	go l.Cleanup()
+
+	page := rod.New().ControlURL(l.MustLaunch()).MustConnect().MustPage()
 
 	if len(b.blockRequests) > 0 {
 		router := page.HijackRequests()
@@ -106,18 +110,22 @@ func (b *Bartender) WarmUp() {
 
 // AutoFree automatically closes the each headless browser after a period of time.
 // It prevent the memory leak of the headless browser.
-func (b *Bartender) AutoFree() {
+func (b *Bartender) AutoFree(interval time.Duration) {
 	go func() {
 		for {
-			time.Sleep(10 * time.Minute)
+			time.Sleep(interval)
 
-			err := b.getPage().Browser().Close()
+			page := b.getPage()
+			browser := page.Browser()
+
+			err := browser.Close()
 			if err != nil {
 				log.Println("failed to close browser:", err)
 
 				continue
 			}
 			b.pool.Put(nil)
+			log.Println("headless browser freed:", page.SessionID)
 		}
 	}()
 }
